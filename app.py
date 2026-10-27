@@ -828,7 +828,7 @@ if active_student:
                     names="category",
                     values="impact_points",
                     hole=0.45,
-                    color_discrete_sequence=px.colors.sequential.Indigo
+                    color_discrete_sequence=["#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe", "#312e81", "#1e1b4b"]
                 )
                 fig_pie.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=320)
                 st.plotly_chart(fig_pie, use_container_width=True)
