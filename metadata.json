@@ -1,0 +1,6 @@
+{
+  "name": "ScholarPulse - Student Academic & Portfolio DBMS",
+  "description": "Relational DBMS for tracking student academic progression, drop years, and segregated portfolios with Google Sheets & Excel synchronization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
