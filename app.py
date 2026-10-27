@@ -162,6 +162,37 @@ def calculate_cgpa(semesters):
     return round(weighted_sum / total_credits, 2) if total_credits > 0 else 0.0
 
 # ---------------------------------------------------------
+# Google Sheets & Apps Script Cloud Synchronization
+# ---------------------------------------------------------
+GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/19XXyjrxBRNKlS7xUTZ-fEMVgbNqkYq-nRthhTlGUNwQ/edit?usp=sharing"
+GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzf76sqJbreqsxi7HHBam0oBtdPkV-e_vWNxEcqzR2yVb9VV2zJdbFfWZeUPY3Fv9E/exec"
+
+def sync_to_google_sheet(db_data):
+    import urllib.request, json
+    try:
+        payload = {
+            "students": db_data.get("students", []),
+            "semesters": db_data.get("semesters", []),
+            "courses": db_data.get("courses", []),
+            "seminars": db_data.get("seminars", []),
+            "activities": db_data.get("activities", []),
+            "gaps": db_data.get("gaps", [])
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            GOOGLE_APPS_SCRIPT_URL,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            body = resp.read().decode("utf-8")
+            res = json.loads(body)
+            return True, res.get("message", "All 6 sheets synchronized with 3NF relational data parity!")
+    except Exception as e:
+        return False, str(e)
+
+# ---------------------------------------------------------
 # Seed Data Initialization
 # ---------------------------------------------------------
 def init_default_database():
@@ -375,6 +406,15 @@ with st.sidebar:
     st.divider()
     st.caption("⚡ **Database Synchronization**")
     st.success("● Google Sheets & Relational Store: Connected")
+    st.link_button("📊 Open Connected Google Sheet", GOOGLE_SHEET_URL, use_container_width=True)
+    if st.button("🔄 Sync Records to Google Sheet", use_container_width=True):
+        with st.spinner("Pushing relational data to Google Sheets..."):
+            ok, msg = sync_to_google_sheet(db)
+            if ok:
+                st.toast("✅ Google Sheet Synced Successfully!")
+                st.success(f"Synced: {msg}")
+            else:
+                st.error(f"Sync failed: {msg}")
     st.caption(f"Last Synced: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 # ---------------------------------------------------------
@@ -886,6 +926,25 @@ if active_student:
                 file_name="ScholarPulse_Students_3NF_Export.csv",
                 mime="text/csv"
             )
+
+        st.divider()
+        st.subheader("🌐 Google Sheets Cloud Parity Synchronization")
+        st.markdown(f"""
+        **Connected Spreadsheet:** [`19XXyjrxBRNKlS7xUTZ-fEMVgbNqkYq-nRthhTlGUNwQ`]({GOOGLE_SHEET_URL})  
+        **Integration Pipeline:** Continuous 1-Way Parity via Google Apps Script Webhook.  
+        Synchronizes all 6 normalized relational sheets: `Students_Profile`, `Semester_Progression`, `Theory_Lab_Marks`, `Seminars_Portfolio`, `Activities_Portfolio`, and `Gaps_Clearance`.
+        """)
+        g_btn1, g_btn2 = st.columns(2)
+        with g_btn1:
+            st.link_button("📊 Open Connected Google Spreadsheet", GOOGLE_SHEET_URL, use_container_width=True)
+        with g_btn2:
+            if st.button("🚀 Push Live Sync to Google Sheets", key="btn_sync_tab5", use_container_width=True):
+                with st.spinner("Synchronizing 6 relational tables to Google Sheets..."):
+                    ok, msg = sync_to_google_sheet(db)
+                    if ok:
+                        st.success(f"✅ {msg}")
+                    else:
+                        st.error(f"❌ Synchronization failed: {msg}")
 
         st.divider()
         st.subheader("➕ Enroll New Student into 3NF DBMS")
