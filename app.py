@@ -193,168 +193,144 @@ def sync_to_google_sheet(db_data):
         return False, str(e)
 
 # ---------------------------------------------------------
-# Seed Data Initialization
+# Load Relational Data Exclusively from Connected Google Sheet
 # ---------------------------------------------------------
-def init_default_database():
-    students = [
-        {
-            "student_id": "std-001",
-            "roll_no": "2021CSE042",
-            "full_name": "Shridhar Singh",
-            "email": "shridhar.singh@institution.edu",
-            "phone": "+91 98765 43210",
-            "department": "Computer Science & Engineering",
-            "batch_year": 2021,
-            "current_semester": 6,
-            "status": "Academic Gap / Drop",
-            "secondary_board": "CBSE",
-            "secondary_percentage": 94.2,
-            "secondary_passing_year": 2018,
-            "higher_sec_board": "CBSE",
-            "higher_sec_percentage": 91.8,
-            "higher_sec_stream": "Science (PCM)",
-            "higher_sec_passing_year": 2020,
-            "created_at": "2021-08-15T09:00:00Z"
-        },
-        {
-            "student_id": "std-002",
-            "roll_no": "2021CSE001",
-            "full_name": "Aarav Sharma",
-            "email": "aarav.sharma@institution.edu",
-            "phone": "+91 98765 11001",
-            "department": "Computer Science & Engineering",
-            "batch_year": 2021,
-            "current_semester": 6,
-            "status": "Active",
-            "secondary_board": "ICSE",
-            "secondary_percentage": 96.5,
-            "secondary_passing_year": 2019,
-            "higher_sec_board": "ISC",
-            "higher_sec_percentage": 95.0,
-            "higher_sec_stream": "Science (PCMB)",
-            "higher_sec_passing_year": 2021,
-            "created_at": "2021-08-15T09:00:00Z"
-        },
-        {
-            "student_id": "std-003",
-            "roll_no": "2021IT015",
-            "full_name": "Priya Patel",
-            "email": "priya.patel@institution.edu",
-            "phone": "+91 98765 22002",
-            "department": "Information Technology",
-            "batch_year": 2021,
-            "current_semester": 6,
-            "status": "Active",
-            "secondary_board": "CBSE",
-            "secondary_percentage": 91.0,
-            "secondary_passing_year": 2019,
-            "higher_sec_board": "CBSE",
-            "higher_sec_percentage": 89.4,
-            "higher_sec_stream": "Science (PCM)",
-            "higher_sec_passing_year": 2021,
-            "created_at": "2021-08-15T09:00:00Z"
-        },
-        {
-            "student_id": "std-004",
-            "roll_no": "2022AIDS008",
-            "full_name": "Rohan Mukherjee",
-            "email": "rohan.mukherjee@institution.edu",
-            "phone": "+91 98765 33003",
-            "department": "Artificial Intelligence & Data Science",
-            "batch_year": 2022,
-            "current_semester": 4,
-            "status": "Active",
-            "secondary_board": "West Bengal State Board",
-            "secondary_percentage": 88.5,
-            "secondary_passing_year": 2020,
-            "higher_sec_board": "West Bengal State Board",
-            "higher_sec_percentage": 87.0,
-            "higher_sec_stream": "Science (PCM)",
-            "higher_sec_passing_year": 2022,
-            "created_at": "2022-08-16T09:00:00Z"
-        },
-        {
-            "student_id": "std-005",
-            "roll_no": "2021ECE024",
-            "full_name": "Sneha Reddy",
-            "email": "sneha.reddy@institution.edu",
-            "phone": "+91 98765 44004",
-            "department": "Electronics & Communication",
-            "batch_year": 2021,
-            "current_semester": 6,
-            "status": "Active",
-            "secondary_board": "State Board",
-            "secondary_percentage": 93.4,
-            "secondary_passing_year": 2019,
-            "higher_sec_board": "Telangana Board of Intermediate",
-            "higher_sec_percentage": 94.2,
-            "higher_sec_stream": "Science (PCM)",
-            "higher_sec_passing_year": 2021,
-            "created_at": "2021-08-15T09:00:00Z"
-        }
-    ]
+@st.cache_data(ttl=120, show_spinner=False)
+def load_database_from_google_sheet():
+    import urllib.request, pandas as pd
 
-    semesters = [
-        {"semester_id": "sem-101", "student_id": "std-001", "semester_number": 1, "academic_year": "2021-2022", "sgpa": 8.65, "cgpa": 8.65, "total_credits": 20, "earned_credits": 20, "has_drop_year": False},
-        {"semester_id": "sem-102", "student_id": "std-001", "semester_number": 2, "academic_year": "2021-2022", "sgpa": 8.80, "cgpa": 8.73, "total_credits": 20, "earned_credits": 20, "has_drop_year": False},
-        {"semester_id": "sem-103", "student_id": "std-001", "semester_number": 3, "academic_year": "2022-2023", "sgpa": 8.50, "cgpa": 8.65, "total_credits": 22, "earned_credits": 22, "has_drop_year": False},
-        {"semester_id": "sem-104", "student_id": "std-001", "semester_number": 4, "academic_year": "2022-2023", "sgpa": 8.90, "cgpa": 8.72, "total_credits": 22, "earned_credits": 22, "has_drop_year": False},
-        {"semester_id": "sem-105", "student_id": "std-001", "semester_number": 5, "academic_year": "2023-2024", "sgpa": 0.00, "cgpa": 8.72, "total_credits": 0, "earned_credits": 0, "has_drop_year": True, "drop_reason": "Medical Leave - Major Orthopedic Rehabilitation after sports injury"},
-        {"semester_id": "sem-106", "student_id": "std-001", "semester_number": 6, "academic_year": "2024-2025", "sgpa": 9.15, "cgpa": 8.81, "total_credits": 22, "earned_credits": 22, "has_drop_year": False},
-        
-        {"semester_id": "sem-201", "student_id": "std-002", "semester_number": 1, "academic_year": "2021-2022", "sgpa": 9.40, "cgpa": 9.40, "total_credits": 20, "earned_credits": 20, "has_drop_year": False},
-        {"semester_id": "sem-202", "student_id": "std-002", "semester_number": 2, "academic_year": "2021-2022", "sgpa": 9.55, "cgpa": 9.48, "total_credits": 20, "earned_credits": 20, "has_drop_year": False},
-        {"semester_id": "sem-203", "student_id": "std-002", "semester_number": 3, "academic_year": "2022-2023", "sgpa": 9.30, "cgpa": 9.42, "total_credits": 22, "earned_credits": 22, "has_drop_year": False},
-        {"semester_id": "sem-204", "student_id": "std-002", "semester_number": 4, "academic_year": "2022-2023", "sgpa": 9.60, "cgpa": 9.46, "total_credits": 22, "earned_credits": 22, "has_drop_year": False},
-        {"semester_id": "sem-205", "student_id": "std-002", "semester_number": 5, "academic_year": "2023-2024", "sgpa": 9.50, "cgpa": 9.47, "total_credits": 22, "earned_credits": 22, "has_drop_year": False},
-        {"semester_id": "sem-206", "student_id": "std-002", "semester_number": 6, "academic_year": "2023-2024", "sgpa": 9.70, "cgpa": 9.51, "total_credits": 22, "earned_credits": 22, "has_drop_year": False},
-    ]
+    def fetch_sheet(sheet_name):
+        url = f"https://docs.google.com/spreadsheets/d/19XXyjrxBRNKlS7xUTZ-fEMVgbNqkYq-nRthhTlGUNwQ/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            df = pd.read_csv(resp)
+            valid_cols = [c for c in df.columns if not ("Unnamed" in str(c) or "Column " in str(c))]
+            return df[valid_cols].fillna("")
 
-    courses = [
-        {"course_id": "c-101", "semester_id": "sem-104", "student_id": "std-001", "course_code": "CS401", "course_name": "Database Management Systems", "course_type": "Theory", "credits": 4, "internal_marks": 36, "external_marks": 54, "total_marks": 90, "grade_letter": "O", "grade_point": 10, "status": "Passed"},
-        {"course_id": "c-102", "semester_id": "sem-104", "student_id": "std-001", "course_code": "CS402", "course_name": "Operating Systems Principles", "course_type": "Theory", "credits": 4, "internal_marks": 34, "external_marks": 49, "total_marks": 83, "grade_letter": "E", "grade_point": 9, "status": "Passed"},
-        {"course_id": "c-103", "semester_id": "sem-104", "student_id": "std-001", "course_code": "CS403", "course_name": "Computer Networks Architecture", "course_type": "Theory", "credits": 4, "internal_marks": 35, "external_marks": 51, "total_marks": 86, "grade_letter": "E", "grade_point": 9, "status": "Passed"},
-        {"course_id": "c-104", "semester_id": "sem-104", "student_id": "std-001", "course_code": "CS404", "course_name": "Formal Languages & Automata", "course_type": "Theory", "credits": 4, "internal_marks": 32, "external_marks": 46, "total_marks": 78, "grade_letter": "A", "grade_point": 8, "status": "Passed"},
-        {"course_id": "c-105", "semester_id": "sem-104", "student_id": "std-001", "course_code": "CS491", "course_name": "Database Systems Laboratory", "course_type": "Lab", "credits": 3, "internal_marks": 38, "external_marks": 56, "total_marks": 94, "grade_letter": "O", "grade_point": 10, "status": "Passed"},
-        {"course_id": "c-106", "semester_id": "sem-104", "student_id": "std-001", "course_code": "CS492", "course_name": "Operating Systems & Linux Lab", "course_type": "Lab", "credits": 3, "internal_marks": 37, "external_marks": 53, "total_marks": 90, "grade_letter": "O", "grade_point": 10, "status": "Passed"},
+    try:
+        df_stds = fetch_sheet("Students_Profile")
+        df_sems = fetch_sheet("Semester_Progression")
+        df_courses = fetch_sheet("Theory_Lab_Marks")
+        df_seminars = fetch_sheet("Seminars_Portfolio")
+        df_activities = fetch_sheet("Activities_Portfolio")
+        df_gaps = fetch_sheet("Academic_Gap_Years")
 
-        {"course_id": "c-107", "semester_id": "sem-106", "student_id": "std-001", "course_code": "CS601", "course_name": "Artificial Intelligence & Expert Systems", "course_type": "Theory", "credits": 4, "internal_marks": 38, "external_marks": 55, "total_marks": 93, "grade_letter": "O", "grade_point": 10, "status": "Passed"},
-        {"course_id": "c-108", "semester_id": "sem-106", "student_id": "std-001", "course_code": "CS602", "course_name": "Information & Network Security", "course_type": "Theory", "credits": 4, "internal_marks": 35, "external_marks": 52, "total_marks": 87, "grade_letter": "E", "grade_point": 9, "status": "Passed"},
-        {"course_id": "c-109", "semester_id": "sem-106", "student_id": "std-001", "course_code": "CS603", "course_name": "Big Data Engineering", "course_type": "Theory", "credits": 4, "internal_marks": 36, "external_marks": 50, "total_marks": 86, "grade_letter": "E", "grade_point": 9, "status": "Passed"},
-        {"course_id": "c-110", "semester_id": "sem-106", "student_id": "std-001", "course_code": "CS604", "course_name": "Compiler Design Principles", "course_type": "Theory", "credits": 4, "internal_marks": 33, "external_marks": 48, "total_marks": 81, "grade_letter": "E", "grade_point": 9, "status": "Passed"},
-        {"course_id": "c-111", "semester_id": "sem-106", "student_id": "std-001", "course_code": "CS691", "course_name": "AI & Machine Learning Lab", "course_type": "Lab", "credits": 3, "internal_marks": 39, "external_marks": 57, "total_marks": 96, "grade_letter": "O", "grade_point": 10, "status": "Passed"},
-        {"course_id": "c-112", "semester_id": "sem-106", "student_id": "std-001", "course_code": "CS692", "course_name": "Network Security & Penetration Testing Lab", "course_type": "Lab", "credits": 3, "internal_marks": 38, "external_marks": 54, "total_marks": 92, "grade_letter": "O", "grade_point": 10, "status": "Passed"},
-    ]
+        students = []
+        for _, r in df_stds.iterrows():
+            students.append({
+                "student_id": str(r.get("Student ID", "")).strip(),
+                "roll_no": str(r.get("Roll Number", "")).strip(),
+                "full_name": str(r.get("Full Name", "")).strip(),
+                "email": str(r.get("Email", "")).strip(),
+                "phone": str(r.get("Phone", "")).strip(),
+                "department": str(r.get("Department", "")).strip(),
+                "batch_year": int(float(r.get("Batch Year") or 2021)),
+                "current_semester": int(float(r.get("Current Semester") or 1)),
+                "status": str(r.get("Academic Status", "Active")).strip(),
+                "secondary_board": str(r.get("10th Board", "CBSE")).strip(),
+                "secondary_percentage": float(r.get("10th %") or 85.0),
+                "secondary_passing_year": int(float(r.get("10th Year") or 2019)),
+                "higher_sec_board": str(r.get("12th Board", "CBSE")).strip(),
+                "higher_sec_percentage": float(r.get("12th %") or 85.0),
+                "higher_sec_stream": str(r.get("12th Stream", "Science (PCM)")).strip(),
+                "higher_sec_passing_year": int(float(r.get("12th Year") or 2021)),
+                "created_at": str(r.get("Last Updated", "")),
+                "updated_at": str(r.get("Last Updated", ""))
+            })
 
-    seminars = [
-        {"seminar_id": "sem-1", "student_id": "std-001", "seminar_type": "INTERNAL", "title": "Zero-Knowledge Proofs in Decentralized Identity Verification", "venue_or_organizer": "Department of CSE Colloquium Hall", "date_conducted": "2024-09-14", "role": "Presenter", "certificate_ref": "SEM-2024-CSE-042"},
-        {"seminar_id": "sem-2", "student_id": "std-001", "seminar_type": "EXTERNAL", "title": "IEEE International Symposium on Cloud and Distributed Systems", "venue_or_organizer": "IIT Kharagpur", "date_conducted": "2024-11-20", "role": "Keynote Student Speaker", "certificate_ref": "IEEE-DIST-2024-88"},
-        {"seminar_id": "sem-3", "student_id": "std-002", "seminar_type": "INTERNAL", "title": "Transformer Attention Mechanisms & Efficient Inference", "venue_or_organizer": "AI Research Lab Seminar", "date_conducted": "2024-08-10", "role": "Presenter", "certificate_ref": "SEM-2024-AI-011"}
-    ]
+        semesters = []
+        for _, r in df_sems.iterrows():
+            semesters.append({
+                "semester_id": str(r.get("Semester ID", "")).strip(),
+                "student_id": str(r.get("Student ID", "")).strip(),
+                "semester_number": int(float(r.get("Semester Number") or 1)),
+                "academic_year": str(r.get("Academic Year", "")).strip(),
+                "sgpa": float(r.get("SGPA") or 0.0),
+                "cgpa": float(r.get("CGPA") or 0.0),
+                "total_credits": int(float(r.get("Total Credits") or 0)),
+                "earned_credits": int(float(r.get("Earned Credits") or 0)),
+                "has_drop_year": str(r.get("Has Drop Year", "")).strip().upper() in ["YES", "TRUE", "1"],
+                "drop_reason": str(r.get("Drop Reason", "")).strip()
+            })
 
-    activities = [
-        {"activity_id": "act-1", "student_id": "std-001", "activity_class": "TECHNICAL_CO_CURRICULAR", "category": "Hackathon", "event_name": "Smart India Hackathon (Grand Finale)", "achievement_or_award": "1st Place", "event_date": "2023-12-22", "organizer": "Ministry of Education / AICTE", "impact_points": 100, "certificate_ref": "SIH-2023-WIN-942"},
-        {"activity_id": "act-2", "student_id": "std-001", "activity_class": "TECHNICAL_CO_CURRICULAR", "category": "Coding Competition", "event_name": "ACM ICPC Regional Qualifiers", "achievement_or_award": "Runner Up", "event_date": "2024-01-18", "organizer": "Amrita Vishwa Vidyapeetham", "impact_points": 80, "certificate_ref": "ICPC-2024-REG-12"},
-        {"activity_id": "act-3", "student_id": "std-001", "activity_class": "EXTRA_CURRICULAR", "category": "Sports & Athletics", "event_name": "Inter-University Basketball Championship", "achievement_or_award": "1st Place", "event_date": "2024-03-05", "organizer": "State Sports Council", "impact_points": 70, "certificate_ref": "SPORTS-2024-BB-05"},
-        {"activity_id": "act-4", "student_id": "std-002", "activity_class": "TECHNICAL_CO_CURRICULAR", "category": "Paper Presentation", "event_name": "National Conference on High Performance Computing", "achievement_or_award": "1st Place", "event_date": "2024-02-15", "organizer": "C-DAC Pune", "impact_points": 95, "certificate_ref": "HPC-2024-P-001"}
-    ]
+        courses = []
+        for _, r in df_courses.iterrows():
+            courses.append({
+                "course_id": str(r.get("Course ID", "")).strip(),
+                "semester_id": str(r.get("Semester ID", "")).strip(),
+                "student_id": str(r.get("Student ID", "")).strip(),
+                "course_code": str(r.get("Course Code", "")).strip(),
+                "course_name": str(r.get("Course Name", "")).strip(),
+                "course_type": str(r.get("Course Type", "Theory")).strip(),
+                "credits": int(float(r.get("Credits") or 4)),
+                "internal_marks": int(float(r.get("Internal (40)") or 0)),
+                "external_marks": int(float(r.get("External (60)") or 0)),
+                "total_marks": int(float(r.get("Total (100)") or 0)),
+                "grade_letter": str(r.get("Grade Letter", "O")).strip(),
+                "grade_point": int(float(r.get("Grade Point") or 10)),
+                "status": str(r.get("Status", "Passed")).strip()
+            })
 
-    gaps = [
-        {"gap_id": "gap-1", "student_id": "std-001", "gap_type": "Mid-Course Drop Year", "academic_year_affected": "2023-2024", "duration_years": 1, "reason": "Medical Leave - Major Orthopedic Rehabilitation after accident. Underwent corrective surgery and physical therapy.", "approved_by": "Dean of Academic Affairs & Medical Board", "clearance_status": "Approved"}
-    ]
+        seminars = []
+        for _, r in df_seminars.iterrows():
+            seminars.append({
+                "seminar_id": str(r.get("Seminar ID", "")).strip(),
+                "student_id": str(r.get("Student ID", "")).strip(),
+                "seminar_type": str(r.get("Seminar Type (Internal/External)", "INTERNAL")).strip(),
+                "title": str(r.get("Title", "")).strip(),
+                "venue_or_organizer": str(r.get("Venue / Organizer", "")).strip(),
+                "date_conducted": str(r.get("Date Conducted", "")).strip(),
+                "role": str(r.get("Role", "Presenter")).strip(),
+                "certificate_ref": str(r.get("Certificate Ref", "")).strip()
+            })
+
+        activities = []
+        for _, r in df_activities.iterrows():
+            activities.append({
+                "activity_id": str(r.get("Activity ID", "")).strip(),
+                "student_id": str(r.get("Student ID", "")).strip(),
+                "activity_class": str(r.get("Classification", "TECHNICAL_CO_CURRICULAR")).strip(),
+                "category": str(r.get("Category", "Hackathon")).strip(),
+                "event_name": str(r.get("Event Name", "")).strip(),
+                "achievement_or_award": str(r.get("Achievement / Award", "Participation")).strip(),
+                "event_date": str(r.get("Event Date", "")).strip(),
+                "organizer": str(r.get("Organizer", "")).strip(),
+                "impact_points": int(float(r.get("Impact Points") or 50)),
+                "certificate_ref": str(r.get("Certificate Ref", "")).strip()
+            })
+
+        gaps = []
+        for _, r in df_gaps.iterrows():
+            gaps.append({
+                "gap_id": str(r.get("Gap ID", "")).strip(),
+                "student_id": str(r.get("Student ID", "")).strip(),
+                "gap_type": str(r.get("Gap Classification", "Mid-Course Drop Year")).strip(),
+                "academic_year_affected": str(r.get("Academic Year Affected", "")).strip(),
+                "duration_years": int(float(r.get("Duration (Years)") or 1)),
+                "reason": str(r.get("Reason", "")).strip(),
+                "approved_by": str(r.get("Approved By", "")).strip(),
+                "clearance_status": str(r.get("Clearance Status", "Approved")).strip()
+            })
+
+        if students:
+            return {
+                "students": students,
+                "semesters": semesters,
+                "courses": courses,
+                "seminars": seminars,
+                "activities": activities,
+                "gaps": gaps
+            }
+    except Exception as e:
+        pass
 
     return {
-        "students": students,
-        "semesters": semesters,
-        "courses": courses,
-        "seminars": seminars,
-        "activities": activities,
-        "gaps": gaps
+        "students": [], "semesters": [], "courses": [], "seminars": [], "activities": [], "gaps": []
     }
 
-# Ensure session state is initialized
-if "db" not in st.session_state:
-    st.session_state.db = init_default_database()
+# Ensure session state is initialized strictly from Google Sheet
+if "db" not in st.session_state or not st.session_state.db.get("students"):
+    st.session_state.db = load_database_from_google_sheet()
 
 db = st.session_state.db
 
@@ -415,6 +391,11 @@ with st.sidebar:
                 st.success(f"Synced: {msg}")
             else:
                 st.error(f"Sync failed: {msg}")
+    if st.button("📥 Reload Data from Google Sheet", use_container_width=True):
+        st.cache_data.clear()
+        st.session_state.db = load_database_from_google_sheet()
+        st.toast("✅ Database reloaded directly from Google Sheet!")
+        st.rerun()
     st.caption(f"Last Synced: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 # ---------------------------------------------------------
