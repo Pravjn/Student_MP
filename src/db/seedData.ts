@@ -30,21 +30,28 @@ const DEPT_CODES: Record<string, string> = {
   'Mechanical Engineering': 'MECH'
 };
 
-// First names and last names for generating 105 realistic student profiles
-const FIRST_NAMES = [
-  'Aarav', 'Priya', 'Rohan', 'Sneha', 'Aditya', 'Ananya', 'Vikram', 'Neha',
-  'Rahul', 'Ishaan', 'Tanvi', 'Devansh', 'Pooja', 'Siddharth', 'Shreya', 'Ayush',
-  'Kavya', 'Ritwik', 'Meera', 'Tarun', 'Riya', 'Kunal', 'Divya', 'Varun',
-  'Simran', 'Nikhil', 'Sanya', 'Harshit', 'Swati', 'Yash', 'Shruti', 'Arjun',
-  'Bhavna', 'Gaurav', 'Manish'
-];
-
-const LAST_NAMES = [
-  'Sharma', 'Patel', 'Mukherjee', 'Reddy', 'Verma', 'Iyer', 'Malhotra', 'Gupta',
-  'Nair', 'Joshi', 'Kulkarni', 'Mehta', 'Hegde', 'Rao', 'Deshmukh', 'Mishra',
-  'Bhat', 'Sen', 'Nambiar', 'Kapoor', 'Banerjee', 'Choudhury', 'Pillai', 'Natarajan',
-  'Kaur', 'Agarwal', 'Bhatia', 'Trivedi', 'Saxena', 'Singhania', 'Gokhale', 'Chatterjee',
-  'Bose', 'Pandey', 'Chauhan'
+// 100 Unique student names for zero duplicate records
+const STUDENT_NAMES: Array<[string, string]> = [
+  ['Aarav', 'Sharma'], ['Priya', 'Patel'], ['Rohan', 'Mukherjee'], ['Sneha', 'Reddy'], ['Aditya', 'Verma'],
+  ['Ananya', 'Iyer'], ['Vikram', 'Malhotra'], ['Neha', 'Gupta'], ['Rahul', 'Nair'], ['Ishaan', 'Joshi'],
+  ['Tanvi', 'Kulkarni'], ['Devansh', 'Mehta'], ['Pooja', 'Hegde'], ['Siddharth', 'Rao'], ['Shreya', 'Deshmukh'],
+  ['Ayush', 'Mishra'], ['Kavya', 'Bhat'], ['Ritwik', 'Sen'], ['Meera', 'Nambiar'], ['Tarun', 'Kapoor'],
+  ['Riya', 'Banerjee'], ['Kunal', 'Choudhury'], ['Divya', 'Pillai'], ['Varun', 'Natarajan'], ['Simran', 'Kaur'],
+  ['Nikhil', 'Agarwal'], ['Sanya', 'Bhatia'], ['Harshit', 'Trivedi'], ['Swati', 'Saxena'], ['Yash', 'Singhania'],
+  ['Shruti', 'Gokhale'], ['Arjun', 'Chatterjee'], ['Bhavna', 'Bose'], ['Gaurav', 'Pandey'], ['Manish', 'Chauhan'],
+  ['Shridhar', 'Singh'], ['Aakash', 'Tiwari'], ['Aditi', 'Roy'], ['Alok', 'Sengupta'], ['Amrita', 'Das'],
+  ['Aniket', 'Jadhav'], ['Ankita', 'Ghosal'], ['Anupam', 'Bhattacharya'], ['Aparna', 'Menon'], ['Arman', 'Sheikh'],
+  ['Ashish', 'Dubashi'], ['Avani', 'Chawla'], ['Chetan', 'Rane'], ['Deepa', 'Venkatesh'], ['Dhruv', 'Tambe'],
+  ['Esha', 'Somani'], ['Farhan', 'Akhtar'], ['Gayatri', 'Varma'], ['Girish', 'Kamath'], ['Himanshu', 'Kaushik'],
+  ['Inderjeet', 'Ahluwalia'], ['Ishita', 'Majumdar'], ['Jayant', 'Salunkhe'], ['Jyoti', 'Sundaram'], ['Karan', 'Johar'],
+  ['Kirti', 'Shinde'], ['Lakshman', 'Murthy'], ['Madhavan', 'Swaminathan'], ['Malini', 'Krishnan'], ['Mayank', 'Lodha'],
+  ['Mithun', 'Chakraborty'], ['Mohit', 'Suri'], ['Nandini', 'Bhatt'], ['Navin', 'Grover'], ['Nidhi', 'Agnihotri'],
+  ['Omkar', 'Gaikwad'], ['Pallavi', 'Shrotri'], ['Pankaj', 'Tripathi'], ['Payal', 'Rohatgi'], ['Pranav', 'Mhatre'],
+  ['Prerna', 'Bajaj'], ['Raghu', 'Ramakrishnan'], ['Rajeshwari', 'Raman'], ['Rashmi', 'Sawant'], ['Rohit', 'Saraf'],
+  ['Sagarika', 'Ghatge'], ['Sahil', 'Parekh'], ['Sameer', 'Wankhede'], ['Sandeep', 'Khurana'], ['Sanjana', 'Sanghi'],
+  ['Saurabh', 'Shukla'], ['Shalini', 'Pandey'], ['Shivam', 'Dube'], ['Smriti', 'Mandhana'], ['Soham', 'Kadam'],
+  ['Sonali', 'Bendre'], ['Sourav', 'Ganguly'], ['Subhash', 'Chandra'], ['Sudhir', 'Phadke'], ['Sumit', 'Nagal'],
+  ['Suraj', 'Pancholi'], ['Tejaswini', 'Sawant'], ['Utkarsh', 'Ambudkar'], ['Vaibhav', 'Suryavanshi'], ['Vidya', 'Balan']
 ];
 
 // Boards & streams
@@ -177,22 +184,23 @@ function generateInitialDataset() {
   const activities: StudentActivity[] = [];
   const gaps: AcademicGapRecord[] = [];
 
-  const TOTAL_STUDENTS = 105;
+  const TOTAL_STUDENTS = 100;
 
   for (let i = 0; i < TOTAL_STUDENTS; i++) {
     const studentIndex = i + 1;
     const studentId = `stu-${String(studentIndex).padStart(3, '0')}`;
-    const firstName = FIRST_NAMES[i % FIRST_NAMES.length];
-    const lastName = LAST_NAMES[(i * 3 + Math.floor(i / FIRST_NAMES.length)) % LAST_NAMES.length];
+    const [firstName, lastName] = STUDENT_NAMES[i];
     const fullName = `${firstName} ${lastName}`;
 
     // STRICT USER REQUIREMENT:
-    // Mail like 123@viva-technology.org. We format every student email as e.g. 101@viva-technology.org, 102@viva-technology.org, etc.
-    const emailNumber = 100 + studentIndex;
-    const email = `${emailNumber}@viva-technology.org`;
+    // Email formatted as name@viva-technology.org (e.g. aarav.sharma@viva-technology.org)
+    const cleanFirst = firstName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanLast = lastName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const email = `${cleanFirst}.${cleanLast}@viva-technology.org`;
 
     const dept = DEPARTMENTS[i % DEPARTMENTS.length];
     const deptCode = DEPT_CODES[dept];
+    const deptNum = Math.floor(i / DEPARTMENTS.length) + 1;
 
     // Distribute batches: 2020 (Sem 8), 2021 (Sem 6), 2022 (Sem 4), 2023 (Sem 2)
     const batchOffset = i % 4;
@@ -201,12 +209,12 @@ function generateInitialDataset() {
     if (currentSemester > 8) currentSemester = 8;
     if (currentSemester < 1) currentSemester = 1;
 
-    // Drop years for ~8 students across the cohort
-    const hasGap = (i === 1 || i === 12 || i === 25 || i === 41 || i === 58 || i === 73 || i === 89 || i === 101);
+    // Drop years for 8 students across the cohort
+    const hasGap = (i === 2 || i === 13 || i === 26 || i === 42 || i === 59 || i === 74 || i === 88 || i === 97);
     const status = hasGap ? 'Academic Gap / Drop' : (batchYear === 2020 && currentSemester === 8 && i % 5 === 0 ? 'Graduated' : 'Active');
 
-    const rollNo = `${batchYear}${deptCode}${String((i % 30) + 1).padStart(3, '0')}`;
-    const phone = `+91 98${String(100 + (i * 7) % 899)} ${String(10000 + (i * 13) % 89999)}`;
+    const rollNo = `${batchYear}${deptCode}${String(deptNum).padStart(3, '0')}`;
+    const phone = `+91 98201 ${String(10000 + studentIndex).padStart(5, '0')}`;
 
     // Secondary & Higher Secondary marks
     const secPercentage = +(82.0 + pseudoRandom(i * 11) * 16.5).toFixed(1);

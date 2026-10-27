@@ -324,6 +324,16 @@ def load_database_from_google_sheet():
     except Exception as e:
         pass
 
+    # High-reliability fallback: load 100 verified unique student records if Google Sheet times out
+    import json, os
+    for jp in ["dataset_100.json", "Student_MP-main/dataset_100.json"]:
+        if os.path.exists(jp):
+            try:
+                with open(jp, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+
     return {
         "students": [], "semesters": [], "courses": [], "seminars": [], "activities": [], "gaps": []
     }
