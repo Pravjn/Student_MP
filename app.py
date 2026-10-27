@@ -387,7 +387,69 @@ with st.sidebar:
         active_student_id = student_display_map[selected_display]
     else:
         st.warning("No students match your filter criteria.")
-        active_student_id = db["students"][0]["student_id"] if db["students"] else None
+    st.divider()
+    
+    # ➕ Quick Add Student in Sidebar
+    with st.expander("➕ Add New Student", expanded=False):
+        st.markdown("##### Quick Student Registration")
+        with st.form("form_sidebar_add_student"):
+            sb_name = st.text_input("Full Name *", placeholder="e.g. Aarav Sharma")
+            sb_roll = st.text_input("Roll Number *", placeholder="e.g. 2024CSE021")
+            sb_email = st.text_input("Email (@viva-technology.org) *", placeholder="e.g. aarav.sharma@viva-technology.org")
+            sb_dept = st.selectbox("Department *", [
+                "Computer Science & Engineering",
+                "Information Technology",
+                "Artificial Intelligence & Data Science",
+                "Electronics & Communication",
+                "Mechanical Engineering"
+            ], key="sb_dept")
+            sb_batch = st.number_input("Batch Year", min_value=2018, max_value=2026, value=2024, key="sb_batch")
+            sb_sem = st.number_input("Current Semester", min_value=1, max_value=8, value=1, key="sb_sem")
+            sb_status = st.selectbox("Status", ["Active", "Academic Gap / Drop", "Graduated"], key="sb_status")
+            if st.form_submit_button("➕ Register Student", use_container_width=True):
+                if not sb_name or not sb_roll or not sb_email:
+                    st.error("Please enter Name, Roll Number, and Email.")
+                elif not sb_email.strip().lower().endswith("@viva-technology.org"):
+                    st.error("Email must end with @viva-technology.org")
+                elif any(s["roll_no"].lower() == sb_roll.strip().lower() for s in db["students"]):
+                    st.error(f"Roll Number {sb_roll} already exists!")
+                else:
+                    new_id = f"stu-{len(db['students'])+1:03d}"
+                    new_student = {
+                        "student_id": new_id,
+                        "roll_no": sb_roll.strip(),
+                        "full_name": sb_name.strip(),
+                        "email": sb_email.strip().lower(),
+                        "phone": f"+91 98201 {10000 + len(db['students']) + 1:05d}",
+                        "department": sb_dept,
+                        "batch_year": int(sb_batch),
+                        "current_semester": int(sb_sem),
+                        "status": sb_status,
+                        "secondary_board": "CBSE",
+                        "secondary_percentage": 85.0,
+                        "secondary_passing_year": int(sb_batch) - 2,
+                        "higher_sec_board": "CBSE",
+                        "higher_sec_percentage": 85.0,
+                        "higher_sec_stream": "Science (PCM)",
+                        "higher_sec_passing_year": int(sb_batch),
+                        "created_at": datetime.now().isoformat(),
+                        "updated_at": datetime.now().isoformat()
+                    }
+                    db["students"].append(new_student)
+                    db["semesters"].append({
+                        "semester_id": f"sem-{new_id}-s1",
+                        "student_id": new_id,
+                        "semester_number": 1,
+                        "academic_year": f"{int(sb_batch)}-{int(sb_batch)+1}",
+                        "sgpa": 0.0,
+                        "cgpa": 0.0,
+                        "total_credits": 20,
+                        "earned_credits": 0,
+                        "has_drop_year": False,
+                        "drop_reason": ""
+                    })
+                    st.success(f"Added {sb_name} ({sb_roll}) successfully!")
+                    st.rerun()
 
     st.divider()
     st.caption("⚡ **Database Synchronization**")
@@ -547,7 +609,7 @@ if active_student:
         "📚 Academic Progression & Marksheet",
         "🏆 Segregated Portfolios",
         "⚠️ Drop Year & Gap Records",
-        "⚙️ Add Records & Export"
+        "➕ Add Student & Export"
     ])
 
     # ---------------------------------------------------------
@@ -1079,13 +1141,13 @@ if active_student:
                         st.error(f"❌ Synchronization failed: {msg}")
 
         st.divider()
-        st.subheader("➕ Enroll New Student into 3NF DBMS")
+        st.subheader("➕ Add Student / Enroll New Record into 3NF DBMS")
         with st.form("form_register_student"):
             r1, r2, r3 = st.columns(3)
             with r1:
                 st_name = st.text_input("Full Name *", placeholder="e.g. Vikram Malhotra")
-                st_roll = st.text_input("Roll No *", placeholder="e.g. 2022CSE099")
-                st_email = st.text_input("Institute Email *", placeholder="e.g. vikram.m@institution.edu")
+                st_roll = st.text_input("Roll No *", placeholder="e.g. 2024CSE025")
+                st_email = st.text_input("Institute Email * (@viva-technology.org)", placeholder="e.g. vikram.malhotra@viva-technology.org")
             with r2:
                 st_dept = st.selectbox("Department *", [
                     "Computer Science & Engineering",
@@ -1094,49 +1156,58 @@ if active_student:
                     "Electronics & Communication",
                     "Mechanical Engineering"
                 ])
-                st_batch = st.number_input("Batch Year", min_value=2018, max_value=2026, value=2022)
+                st_batch = st.number_input("Batch Year", min_value=2018, max_value=2026, value=2024)
                 st_curr_sem = st.number_input("Current Semester", min_value=1, max_value=8, value=1)
             with r3:
                 st_sec_pct = st.number_input("10th (Secondary) Percentage", min_value=35.0, max_value=100.0, value=88.5, step=0.1)
                 st_hsec_pct = st.number_input("12th (Higher Sec) Percentage", min_value=35.0, max_value=100.0, value=86.0, step=0.1)
                 st_status = st.selectbox("Initial Status", ["Active", "Academic Gap / Drop", "Graduated"])
 
-            if st.form_submit_button("Register Student Record"):
-                new_id = f"std-{len(db['students'])+1:03d}"
-                new_student = {
-                    "student_id": new_id,
-                    "roll_no": st_roll,
-                    "full_name": st_name,
-                    "email": st_email,
-                    "phone": "+91 99999 88888",
-                    "department": st_dept,
-                    "batch_year": st_batch,
-                    "current_semester": st_curr_sem,
-                    "status": st_status,
-                    "secondary_board": "CBSE",
-                    "secondary_percentage": st_sec_pct,
-                    "secondary_passing_year": st_batch - 3,
-                    "higher_sec_board": "CBSE",
-                    "higher_sec_percentage": st_hsec_pct,
-                    "higher_sec_stream": "Science (PCM)",
-                    "higher_sec_passing_year": st_batch - 1,
-                    "created_at": datetime.now().isoformat()
-                }
-                db["students"].append(new_student)
-                # Create initial semester 1
-                db["semesters"].append({
-                    "semester_id": f"sem-{len(db['semesters'])+1}",
-                    "student_id": new_id,
-                    "semester_number": 1,
-                    "academic_year": f"{st_batch}-{st_batch+1}",
-                    "sgpa": 0.0,
-                    "cgpa": 0.0,
-                    "total_credits": 20,
-                    "earned_credits": 0,
-                    "has_drop_year": False
-                })
-                st.success(f"Student {st_name} ({st_roll}) registered successfully in 3NF DBMS!")
-                st.rerun()
+            if st.form_submit_button("➕ Register Student Record", use_container_width=True):
+                if not st_name or not st_roll or not st_email:
+                    st.error("Please enter Name, Roll Number, and Email.")
+                elif not st_email.strip().lower().endswith("@viva-technology.org"):
+                    st.error("Email must strictly end with @viva-technology.org")
+                elif any(s["roll_no"].lower() == st_roll.strip().lower() for s in db["students"]):
+                    st.error(f"Roll number {st_roll} already exists in database!")
+                else:
+                    new_id = f"stu-{len(db['students'])+1:03d}"
+                    new_student = {
+                        "student_id": new_id,
+                        "roll_no": st_roll.strip(),
+                        "full_name": st_name.strip(),
+                        "email": st_email.strip().lower(),
+                        "phone": f"+91 98201 {10000 + len(db['students']) + 1:05d}",
+                        "department": st_dept,
+                        "batch_year": int(st_batch),
+                        "current_semester": int(st_curr_sem),
+                        "status": st_status,
+                        "secondary_board": "CBSE",
+                        "secondary_percentage": st_sec_pct,
+                        "secondary_passing_year": int(st_batch) - 2,
+                        "higher_sec_board": "CBSE",
+                        "higher_sec_percentage": st_hsec_pct,
+                        "higher_sec_stream": "Science (PCM)",
+                        "higher_sec_passing_year": int(st_batch),
+                        "created_at": datetime.now().isoformat(),
+                        "updated_at": datetime.now().isoformat()
+                    }
+                    db["students"].append(new_student)
+                    # Create initial semester 1
+                    db["semesters"].append({
+                        "semester_id": f"sem-{new_id}-s1",
+                        "student_id": new_id,
+                        "semester_number": 1,
+                        "academic_year": f"{int(st_batch)}-{int(st_batch)+1}",
+                        "sgpa": 0.0,
+                        "cgpa": 0.0,
+                        "total_credits": 20,
+                        "earned_credits": 0,
+                        "has_drop_year": False,
+                        "drop_reason": ""
+                    })
+                    st.success(f"Student {st_name} ({st_roll}) registered successfully in 3NF DBMS!")
+                    st.rerun()
 
 # ---------------------------------------------------------
 # Footer Information
