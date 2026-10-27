@@ -451,6 +451,31 @@ with st.sidebar:
                     st.success(f"Added {sb_name} ({sb_roll}) successfully!")
                     st.rerun()
 
+    # 🗑️ Quick Delete Student in Sidebar
+    with st.expander("🗑️ Delete Student Record", expanded=False):
+        st.markdown("##### Remove Student Record")
+        if db["students"]:
+            sb_del_options = {
+                f"{s['roll_no']} - {s['full_name']}": s["student_id"] for s in db["students"]
+            }
+            sb_target_id = st.selectbox("Select Student to Delete", list(sb_del_options.keys()), key="sb_del_select")
+            sb_sel_id = sb_del_options[sb_target_id]
+            sb_target_std = next((s for s in db["students"] if s["student_id"] == sb_sel_id), None)
+            if sb_target_std:
+                st.caption(f"Will cascade delete: `{sb_target_std['full_name']}` ({sb_target_std['email']})")
+                sb_confirm = st.checkbox("Confirm deletion", key="sb_chk_del")
+                if st.button("🗑️ Delete Student", key="btn_sb_delete", type="primary", use_container_width=True, disabled=not sb_confirm):
+                    db["students"] = [s for s in db["students"] if s["student_id"] != sb_sel_id]
+                    db["semesters"] = [s for s in db["semesters"] if s["student_id"] != sb_sel_id]
+                    db["courses"] = [c for c in db["courses"] if c["student_id"] != sb_sel_id]
+                    db["seminars"] = [sem for sem in db["seminars"] if sem["student_id"] != sb_sel_id]
+                    db["activities"] = [a for a in db["activities"] if a["student_id"] != sb_sel_id]
+                    db["gaps"] = [g for g in db["gaps"] if g["student_id"] != sb_sel_id]
+                    st.toast(f"Deleted {sb_target_std['full_name']}!")
+                    st.rerun()
+        else:
+            st.warning("No students to delete.")
+
     st.divider()
     st.caption("⚡ **Database Synchronization**")
     st.success("● Google Sheets & Relational Store: Connected")
@@ -1208,6 +1233,63 @@ if active_student:
                     })
                     st.success(f"Student {st_name} ({st_roll}) registered successfully in 3NF DBMS!")
                     st.rerun()
+
+        st.divider()
+        st.subheader("🗑️ Delete Student Details (Cascading 3NF Removal)")
+        st.caption("Select any student record to permanently remove from the 3NF relational database. Deletion automatically cascades across all associated semesters, theory/lab evaluation marks, seminars, activities, and gap records.")
+
+        if db["students"]:
+            del_options = {
+                f"{s['roll_no']} - {s['full_name']} ({s['department']})": s["student_id"] for s in db["students"]
+            }
+            default_idx = 0
+            if active_student_id:
+                try:
+                    matching_keys = [k for k, v in del_options.items() if v == active_student_id]
+                    if matching_keys:
+                        default_idx = list(del_options.keys()).index(matching_keys[0])
+                except Exception:
+                    default_idx = 0
+
+            selected_del_label = st.selectbox(
+                "Select Student to Permanently Remove",
+                list(del_options.keys()),
+                index=default_idx,
+                key="sel_tab4_delete_student"
+            )
+            target_del_id = del_options[selected_del_label]
+            target_del_std = next((s for s in db["students"] if s["student_id"] == target_del_id), None)
+
+            if target_del_std:
+                rel_sems = [s for s in db["semesters"] if s["student_id"] == target_del_std["student_id"]]
+                rel_courses = [c for c in db["courses"] if c["student_id"] == target_del_std["student_id"]]
+                rel_seminars = [sem for sem in db["seminars"] if sem["student_id"] == target_del_std["student_id"]]
+                rel_activities = [a for a in db["activities"] if a["student_id"] == target_del_std["student_id"]]
+                rel_gaps = [g for g in db["gaps"] if g["student_id"] == target_del_std["student_id"]]
+
+                d_col1, d_col2 = st.columns([2, 1])
+                with d_col1:
+                    st.info(f"""
+                    **Student Profile to be Deleted:**  
+                    - **Name:** {target_del_std['full_name']} | **Roll No:** `{target_del_std['roll_no']}`  
+                    - **Institutional Email:** `{target_del_std['email']}`  
+                    - **Department:** {target_del_std['department']} | **Batch Year:** {target_del_std['batch_year']}  
+                    - **Cascading Associated Data:** {len(rel_sems)} Semesters, {len(rel_courses)} Courses, {len(rel_seminars)} Seminars, {len(rel_activities)} Activities, {len(rel_gaps)} Gap Records
+                    """)
+                with d_col2:
+                    confirm_delete = st.checkbox(f"⚠️ I confirm permanent removal of {target_del_std['full_name']}", key="chk_tab4_confirm_delete")
+                    if st.button("🗑️ Permanently Delete Student Details", type="primary", use_container_width=True, disabled=not confirm_delete):
+                        # Cascading deletion across all 6 relational tables
+                        db["students"] = [s for s in db["students"] if s["student_id"] != target_del_std["student_id"]]
+                        db["semesters"] = [s for s in db["semesters"] if s["student_id"] != target_del_std["student_id"]]
+                        db["courses"] = [c for c in db["courses"] if c["student_id"] != target_del_std["student_id"]]
+                        db["seminars"] = [sem for sem in db["seminars"] if sem["student_id"] != target_del_std["student_id"]]
+                        db["activities"] = [a for a in db["activities"] if a["student_id"] != target_del_std["student_id"]]
+                        db["gaps"] = [g for g in db["gaps"] if g["student_id"] != target_del_std["student_id"]]
+                        st.success(f"✅ Student {target_del_std['full_name']} ({target_del_std['roll_no']}) and all cascading records successfully removed from 3NF DBMS!")
+                        st.rerun()
+        else:
+            st.warning("No students currently in database.")
 
 # ---------------------------------------------------------
 # Footer Information
