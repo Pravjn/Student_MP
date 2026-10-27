@@ -793,89 +793,244 @@ if active_student:
     # TAB 4: Analytics & Visualizations
     # ---------------------------------------------------------
     with tab_analytics:
-        st.subheader("Student Academic & Progression Visual Analytics")
+        st.subheader("📊 Interactive Academic & Institutional DBMS Visual Analytics")
+        st.caption("Deep-dive into student progression trajectories, continuous vs external evaluation, and multi-tier portfolio distribution.")
 
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("##### 📈 SGPA Progression across Semesters")
-            if student_sems:
-                df_sems = pd.DataFrame(student_sems).sort_values("semester_number")
-                fig_sgpa = go.Figure()
-                fig_sgpa.add_trace(go.Scatter(
-                    x=[f"Sem {n}" for n in df_sems["semester_number"]],
-                    y=df_sems["sgpa"],
-                    mode="lines+markers+text",
-                    text=[f"{v:.2f}" for v in df_sems["sgpa"]],
-                    textposition="top center",
-                    name="SGPA",
-                    line=dict(color="#4f46e5", width=3)
-                ))
-                fig_sgpa.add_hline(y=7.5, line_dash="dash", line_color="#10b981", annotation_text="Distinction (7.5)")
-                fig_sgpa.update_layout(
-                    yaxis=dict(range=[0, 10.5], title="Grade Point"),
-                    margin=dict(l=20, r=20, t=30, b=20),
-                    height=320
-                )
-                st.plotly_chart(fig_sgpa, use_container_width=True)
-            else:
-                st.info("No semester data available.")
+        v_tab1, v_tab2, v_tab3 = st.tabs([
+            "👤 Student Trajectory & Evaluation",
+            "🏛️ Cohort & Department Benchmarks",
+            "🏆 Portfolios & Drop-Year Governance"
+        ])
 
-        with c2:
-            st.markdown("##### 📊 Theory vs Laboratory Evaluation Split")
-            if student_courses:
-                df_sc = pd.DataFrame(student_courses)
-                fig_split = px.box(
-                    df_sc,
-                    x="course_type",
-                    y="total_marks",
-                    color="course_type",
-                    points="all",
-                    color_discrete_map={"Theory": "#6366f1", "Lab": "#10b981"},
-                    labels={"course_type": "Course Type", "total_marks": "Total Score (/100)"}
-                )
-                fig_split.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=320)
-                st.plotly_chart(fig_split, use_container_width=True)
-            else:
-                st.info("No course evaluation data available.")
+        with v_tab1:
+            st.markdown(f"#### Academic Performance Profile: **{active_student['full_name']}** (`{active_student['roll_no']}`)")
+            col_v1, col_v2 = st.columns(2)
+            
+            with col_v1:
+                st.markdown("##### 📈 1. Semester-Wise SGPA Trajectory vs Distinction Threshold")
+                if student_sems:
+                    df_sems = pd.DataFrame(student_sems).sort_values("semester_number")
+                    fig_sgpa = go.Figure()
+                    fig_sgpa.add_trace(go.Scatter(
+                        x=[f"Sem {n}" for n in df_sems["semester_number"]],
+                        y=df_sems["sgpa"],
+                        mode="lines+markers+text",
+                        text=[f"{v:.2f}" for v in df_sems["sgpa"]],
+                        textposition="top center",
+                        name="SGPA",
+                        line=dict(color="#4f46e5", width=3),
+                        marker=dict(size=9, color="#4338ca")
+                    ))
+                    fig_sgpa.add_hline(y=7.5, line_dash="dash", line_color="#10b981", annotation_text="Distinction (7.5)")
+                    fig_sgpa.add_hline(y=6.0, line_dash="dot", line_color="#f59e0b", annotation_text="First Class (6.0)")
+                    fig_sgpa.update_layout(
+                        yaxis=dict(range=[0, 10.5], title="Grade Point (0-10)"),
+                        margin=dict(l=20, r=20, t=30, b=20),
+                        height=340
+                    )
+                    st.plotly_chart(fig_sgpa, use_container_width=True)
+                else:
+                    st.info("No semester progression data available for this student.")
 
-        c3, c4 = st.columns(2)
-        with c3:
-            st.markdown("##### 🎯 Portfolio Impact Points by Category")
-            if student_activities:
-                df_act = pd.DataFrame(student_activities)
-                cat_summary = df_act.groupby("category")["impact_points"].sum().reset_index()
-                fig_pie = px.pie(
-                    cat_summary,
-                    names="category",
-                    values="impact_points",
-                    hole=0.45,
-                    color_discrete_sequence=["#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe", "#312e81", "#1e1b4b"]
-                )
-                fig_pie.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=320)
-                st.plotly_chart(fig_pie, use_container_width=True)
-            else:
-                st.info("No activities recorded.")
+            with col_v2:
+                st.markdown("##### ⚖️ 2. Internal Assessment (/40) vs End-Sem Exam (/60) Parity")
+                if student_courses:
+                    df_sc = pd.DataFrame(student_courses)
+                    fig_parity = px.scatter(
+                        df_sc,
+                        x="internal_marks",
+                        y="external_marks",
+                        color="course_type",
+                        size="credits",
+                        text="course_code",
+                        hover_name="course_name",
+                        hover_data=["total_marks", "grade_letter", "status"],
+                        color_discrete_map={"Theory": "#4f46e5", "Lab": "#10b981", "Project": "#f59e0b", "Seminar": "#ec4899"},
+                        labels={"internal_marks": "Continuous Internal Assessment (/40)", "external_marks": "End-Semester Examination (/60)"}
+                    )
+                    fig_parity.add_vline(x=16, line_dash="dot", line_color="#94a3b8", annotation_text="Internal Pass (16)")
+                    fig_parity.add_hline(y=24, line_dash="dot", line_color="#94a3b8", annotation_text="External Pass (24)")
+                    fig_parity.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=340)
+                    st.plotly_chart(fig_parity, use_container_width=True)
+                else:
+                    st.info("No course evaluation records available.")
 
-        with c4:
-            st.markdown("##### 🏢 Department-wide CGPA Comparison")
-            all_stds = pd.DataFrame(db["students"])
-            if not all_stds.empty:
-                # Calculate CGPA for each student in db
-                cgpa_list = []
-                for s in db["students"]:
-                    s_sems = [sem for sem in db["semesters"] if sem["student_id"] == s["student_id"]]
-                    cgpa_list.append(calculate_cgpa(s_sems))
-                all_stds["cgpa"] = cgpa_list
-                fig_dept = px.histogram(
-                    all_stds,
-                    x="cgpa",
-                    color="department",
-                    nbins=10,
-                    barmode="overlay",
-                    labels={"cgpa": "CGPA Score", "department": "Department"}
-                )
-                fig_dept.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=320)
-                st.plotly_chart(fig_dept, use_container_width=True)
+            col_v3, col_v4 = st.columns(2)
+            with col_v3:
+                st.markdown("##### 📊 3. Theory vs Laboratory Course Score Distribution")
+                if student_courses:
+                    df_sc = pd.DataFrame(student_courses)
+                    fig_split = px.box(
+                        df_sc,
+                        x="course_type",
+                        y="total_marks",
+                        color="course_type",
+                        points="all",
+                        color_discrete_map={"Theory": "#6366f1", "Lab": "#10b981", "Project": "#f59e0b", "Seminar": "#ec4899"},
+                        labels={"course_type": "Course Type", "total_marks": "Total Score (/100)"}
+                    )
+                    fig_split.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=340)
+                    st.plotly_chart(fig_split, use_container_width=True)
+                else:
+                    st.info("No course evaluation data available.")
+
+            with col_v4:
+                st.markdown("##### 🎯 4. Student Portfolio Impact Points Breakdown")
+                if student_activities:
+                    df_act = pd.DataFrame(student_activities)
+                    cat_summary = df_act.groupby("category")["impact_points"].sum().reset_index()
+                    fig_pie = px.pie(
+                        cat_summary,
+                        names="category",
+                        values="impact_points",
+                        hole=0.45,
+                        color_discrete_sequence=["#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe", "#312e81", "#1e1b4b"]
+                    )
+                    fig_pie.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=340)
+                    st.plotly_chart(fig_pie, use_container_width=True)
+                else:
+                    st.info("No activities recorded for this student.")
+
+        with v_tab2:
+            st.markdown("#### Cohort-Wide Progression & Academic Benchmarks (All 105 Students)")
+            col_b1, col_b2 = st.columns(2)
+            
+            df_all_stds = pd.DataFrame(db.get("students", []))
+            df_all_courses = pd.DataFrame(db.get("courses", []))
+            df_all_sems = pd.DataFrame(db.get("semesters", []))
+
+            if not df_all_stds.empty and "student_id" in df_all_stds.columns:
+                cgpa_dict = {
+                    s["student_id"]: calculate_cgpa([sem for sem in db.get("semesters", []) if sem.get("student_id") == s.get("student_id")])
+                    for s in db.get("students", [])
+                }
+                df_all_stds["calculated_cgpa"] = df_all_stds["student_id"].map(cgpa_dict)
+
+            with col_b1:
+                st.markdown("##### 🎓 5. Pre-Admission 12th Board % vs Current University CGPA Correlation")
+                if not df_all_stds.empty and "calculated_cgpa" in df_all_stds.columns:
+                    fig_corr = px.scatter(
+                        df_all_stds,
+                        x="higher_sec_percentage",
+                        y="calculated_cgpa",
+                        color="department",
+                        hover_name="full_name",
+                        hover_data=["roll_no", "higher_sec_stream", "secondary_percentage", "status"],
+                        labels={"higher_sec_percentage": "12th (Higher Secondary) Board %", "calculated_cgpa": "Current University CGPA"},
+                        color_discrete_sequence=["#4f46e5", "#06b6d4", "#10b981", "#f59e0b", "#ec4899"]
+                    )
+                    fig_corr.add_hline(y=avg_institute_sgpa, line_dash="dash", line_color="#ef4444", annotation_text=f"Mean CGPA ({avg_institute_sgpa})")
+                    fig_corr.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=360)
+                    st.plotly_chart(fig_corr, use_container_width=True)
+                else:
+                    st.info("Cohort student records not loaded.")
+
+            with col_b2:
+                st.markdown("##### 🏆 6. Institutional Grade Letter Distribution (All Evaluated Modules)")
+                if not df_all_courses.empty and "grade_letter" in df_all_courses.columns:
+                    grade_order = ["O", "E", "A", "B", "C", "D", "F"]
+                    grade_counts = df_all_courses["grade_letter"].value_counts().reindex(grade_order, fill_value=0).reset_index()
+                    grade_counts.columns = ["Grade Letter", "Count"]
+                    grade_colors = {
+                        "O": "#10b981", "E": "#059669", "A": "#4f46e5", "B": "#6366f1",
+                        "C": "#f59e0b", "D": "#d97706", "F": "#ef4444"
+                    }
+                    fig_grades = px.bar(
+                        grade_counts,
+                        x="Grade Letter",
+                        y="Count",
+                        color="Grade Letter",
+                        color_discrete_map=grade_colors,
+                        text="Count",
+                        labels={"Count": "Total Courses Evaluated"}
+                    )
+                    fig_grades.update_traces(textposition="outside")
+                    fig_grades.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=360, showlegend=False)
+                    st.plotly_chart(fig_grades, use_container_width=True)
+                else:
+                    st.info("Course evaluation dataset not available.")
+
+            st.markdown("##### 🗺️ 7. Department x Semester SGPA Progression Heatmap Matrix")
+            if not df_all_sems.empty and not df_all_stds.empty and "student_id" in df_all_stds.columns:
+                std_dept_map = df_all_stds.set_index("student_id")["department"].to_dict()
+                df_all_sems["department"] = df_all_sems["student_id"].map(std_dept_map)
+                valid_sems = df_all_sems[df_all_sems["sgpa"] > 0]
+                if not valid_sems.empty:
+                    heatmap_data = valid_sems.groupby(["department", "semester_number"])["sgpa"].mean().round(2).unstack(fill_value=0)
+                    fig_heatmap = go.Figure(data=go.Heatmap(
+                        z=heatmap_data.values,
+                        x=[f"Sem {c}" for c in heatmap_data.columns],
+                        y=heatmap_data.index,
+                        colorscale="Purples",
+                        text=heatmap_data.values,
+                        texttemplate="%{text:.2f}",
+                        textfont={"size": 13, "color": "white"},
+                        colorbar=dict(title="Avg SGPA")
+                    ))
+                    fig_heatmap.update_layout(
+                        margin=dict(l=20, r=20, t=30, b=20),
+                        height=320,
+                        xaxis_title="Academic Semester Number",
+                        yaxis_title="Engineering Department"
+                    )
+                    st.plotly_chart(fig_heatmap, use_container_width=True)
+                else:
+                    st.info("Insufficient semester SGPA data for heatmap.")
+
+        with v_tab3:
+            st.markdown("#### High-Impact Portfolios & Academic Governance Drilldown")
+            col_p1, col_p2 = st.columns(2)
+            
+            df_all_act = pd.DataFrame(db.get("activities", []))
+            df_all_gaps = pd.DataFrame(db.get("gaps", []))
+
+            with col_p1:
+                st.markdown("##### 🌟 8. Top 10 High-Impact Student Portfolio Achievers")
+                if not df_all_act.empty and not df_all_stds.empty and "student_id" in df_all_stds.columns:
+                    std_name_map = df_all_stds.set_index("student_id")["full_name"].to_dict()
+                    df_all_act["Student Name"] = df_all_act["student_id"].map(std_name_map)
+                    df_all_act["Portfolio Class"] = df_all_act["activity_class"].apply(
+                        lambda x: "Technical Co-Curricular" if "CO_CURRICULAR" in str(x) else "Extra-Curricular"
+                    )
+                    top_students = df_all_act.groupby("Student Name")["impact_points"].sum().nlargest(10).index
+                    df_top = df_all_act[df_all_act["Student Name"].isin(top_students)]
+                    
+                    fig_leader = px.bar(
+                        df_top,
+                        x="impact_points",
+                        y="Student Name",
+                        color="Portfolio Class",
+                        orientation="h",
+                        color_discrete_map={"Technical Co-Curricular": "#4f46e5", "Extra-Curricular": "#10b981"},
+                        labels={"impact_points": "Total Impact Points", "Student Name": "Student"}
+                    )
+                    fig_leader.update_layout(
+                        margin=dict(l=20, r=20, t=30, b=20),
+                        height=360,
+                        barmode="stack",
+                        yaxis={"categoryorder": "total ascending"}
+                    )
+                    st.plotly_chart(fig_leader, use_container_width=True)
+                else:
+                    st.info("No activity records available for leaderboard.")
+
+            with col_p2:
+                st.markdown("##### ⚠️ 9. Academic Gap & Drop Year Governance Drilldown")
+                if not df_all_gaps.empty and not df_all_stds.empty and "student_id" in df_all_stds.columns:
+                    std_dept_map = df_all_stds.set_index("student_id")["department"].to_dict()
+                    df_all_gaps["department"] = df_all_gaps["student_id"].map(std_dept_map)
+                    fig_gaps_sun = px.sunburst(
+                        df_all_gaps,
+                        path=["department", "gap_type", "clearance_status"],
+                        values="duration_years",
+                        color="clearance_status",
+                        color_discrete_map={"Approved": "#10b981", "Under Review": "#f59e0b", "Cleared": "#06b6d4"},
+                        labels={"duration_years": "Duration (Years)"}
+                    )
+                    fig_gaps_sun.update_layout(margin=dict(l=20, r=20, t=30, b=20), height=360)
+                    st.plotly_chart(fig_gaps_sun, use_container_width=True)
+                else:
+                    st.info("No academic gap records available.")
 
     # ---------------------------------------------------------
     # TAB 5: Add Records & Export
